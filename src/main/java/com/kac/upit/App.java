@@ -18,6 +18,8 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -248,6 +250,8 @@ public class App extends JFrame implements ActionListener, ProgressListener, Cli
 	public static String P_SCALE_IMAGES = "scaleImages";
 	public static String P_TARGET_WIDTH = "targetWidth";
 	public static String P_TO_JPG = "toJPG";
+	public static String P_WIDTH = "width";
+	public static String P_HEIGHT = "height";
 	boolean d_scaleImages = true;
 	int d_targetWidth = 800;
 	boolean d_toJPG = true;
@@ -268,6 +272,8 @@ public class App extends JFrame implements ActionListener, ProgressListener, Cli
 			JOptionPane.showMessageDialog(this, e.toString(), "Błąd", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		}
+
+		prefs = Preferences.userNodeForPackage(App.class);
 		setLayout(new BorderLayout());
 		model = new MyModel();
 		table = new JTable(model);
@@ -342,7 +348,6 @@ public class App extends JFrame implements ActionListener, ProgressListener, Cli
 		bottom.add(panel);
 
 		panel = new JPanel();
-		prefs = Preferences.userNodeForPackage(App.class);
 		panel.add(p_scaleImages = new JCheckBox("scale",
 				prefs.getBoolean(P_SCALE_IMAGES, d_scaleImages)));
 		panel.add(p_targetWidth = new JFormattedTextField(new NumberFormatter()));
@@ -391,10 +396,18 @@ public class App extends JFrame implements ActionListener, ProgressListener, Cli
 				getClass().getClassLoader().getResource("com/kac/upit/upit.png")).getImage();
 		setIconImage(image);
 
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				Dimension d = getSize();
+				prefs.putInt(P_WIDTH, d.width);
+				prefs.putInt(P_HEIGHT, d.height);
+			}
+		});
 	}
 
 	void locateTopRight() {
-		setSize(goodSize);
+		setSize(prefs.getInt(P_WIDTH, goodSize.width), prefs.getInt(P_HEIGHT, goodSize.height));
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice defaultScreen = ge.getDefaultScreenDevice();
 		Rectangle rect = defaultScreen.getDefaultConfiguration().getBounds();
